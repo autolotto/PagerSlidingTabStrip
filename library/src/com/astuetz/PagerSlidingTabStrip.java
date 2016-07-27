@@ -35,6 +35,7 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -122,6 +123,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         setWillNotDraw(false);
         mTabsContainer = new LinearLayout(context);
         mTabsContainer.setOrientation(LinearLayout.HORIZONTAL);
+        mTabsContainer.setGravity(Gravity.CENTER_VERTICAL);
         addView(mTabsContainer);
 
         mRectPaint = new Paint();
@@ -203,8 +205,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
         //Configure tab's container LayoutParams for either equal divided space or just wrap tabs
         mTabLayoutParams = isExpandTabs ?
-                new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f) :
-                new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+                new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1.0f) :
+                new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     }
 
     private void setTabsContainerParentViewPaddings() {
@@ -301,8 +303,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             //- Or tabs start at the begging (no padding) scrolling when indicator gets
             //  to the middle of the view width
             newScrollX -= mScrollOffset;
-            Pair<Float, Float> lines = getIndicatorCoordinates();
-            newScrollX += ((lines.second - lines.first) / 2);
+            Float[] lines = getIndicatorCoordinates();
+            newScrollX += ((lines[1] - lines[0]) / 2);
         }
 
         if (newScrollX != mLastScrollX) {
@@ -311,11 +313,12 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         }
     }
 
-    private Pair<Float, Float> getIndicatorCoordinates() {
+    private Float[] getIndicatorCoordinates() {
         // default: line below current tab
         View currentTab = mTabsContainer.getChildAt(mCurrentPosition);
         float lineLeft = currentTab.getLeft();
         float lineRight = currentTab.getRight();
+        float lineBottom = currentTab.getBottom();
         // if there is an offset, start interpolating left and right coordinates between current and next tab
         if (mCurrentPositionOffset > 0f && mCurrentPosition < mTabCount - 1) {
             View nextTab = mTabsContainer.getChildAt(mCurrentPosition + 1);
@@ -325,7 +328,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             lineRight = (mCurrentPositionOffset * nextTabRight + (1f - mCurrentPositionOffset) * lineRight);
         }
 
-        return new Pair<Float, Float>(lineLeft, lineRight);
+        return new Float[] {lineLeft, lineRight, lineBottom};
     }
 
     @Override
@@ -417,8 +420,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         // draw indicator line
         if (mIndicatorHeight > 0) {
             mRectPaint.setColor(mIndicatorColor);
-            Pair<Float, Float> lines = getIndicatorCoordinates();
-            canvas.drawRect(lines.first + mPaddingLeft, height - mIndicatorHeight, lines.second + mPaddingLeft, height, mRectPaint);
+            Float[] lines = getIndicatorCoordinates();
+            canvas.drawRect(lines[0] + mPaddingLeft, lines[2] + mIndicatorHeight, lines[1] + mPaddingLeft, lines[2] + 2 * mIndicatorHeight, mRectPaint);
         }
     }
 
