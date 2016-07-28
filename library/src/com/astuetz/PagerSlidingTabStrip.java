@@ -109,6 +109,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
     private int mTabBackgroundResId = R.drawable.psts_background_tab;
 
+    private static final String DEFAULT_TEXT_FONT = "Oswald-Bold.ttf";
+
     public PagerSlidingTabStrip(Context context) {
         this(context, null);
     }
@@ -198,7 +200,15 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         if (fontFamily != null) {
             tabTextTypefaceName = fontFamily;
         }
-        mTabTextTypeface = Typeface.create(tabTextTypefaceName, mTabTextTypefaceStyle);
+
+        // TODO: for custom font [7/28/2016]
+//        mTabTextTypeface = Typeface.create(tabTextTypefaceName, mTabTextTypefaceStyle);
+        try {
+            mTabTextTypeface = Typeface.createFromAsset(context.getAssets(), "fonts/" + (tabTextTypefaceName != null ? tabTextTypefaceName : DEFAULT_TEXT_FONT));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         //Bottom padding for the tabs container parent view to show indicator and underline
         setTabsContainerParentViewPaddings();
