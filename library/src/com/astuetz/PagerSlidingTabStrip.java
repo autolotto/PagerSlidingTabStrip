@@ -431,7 +431,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         if (mIndicatorHeight > 0) {
             mRectPaint.setColor(mIndicatorColor);
             Float[] lines = getIndicatorCoordinates();
-            canvas.drawRect(lines[0] + mPaddingLeft, lines[2] + mIndicatorHeight, lines[1] + mPaddingLeft, lines[2] + 2 * mIndicatorHeight, mRectPaint);
+//            canvas.drawRect(lines[0] + mPaddingLeft, lines[2] + mIndicatorHeight, lines[1] + mPaddingLeft, lines[2] + 2 * mIndicatorHeight, mRectPaint);
+            View currentTab = mTabsContainer.getChildAt(mCurrentPosition);
+            float lineLeft = currentTab.getPaddingLeft();
+            float lineRight = currentTab.getPaddingRight();
+            canvas.drawRect(lines[0] + mPaddingLeft + lineLeft, lines[2] + mIndicatorHeight, lines[1] + mPaddingLeft - lineRight, lines[2] + 2 * mIndicatorHeight, mRectPaint);
         }
     }
 
