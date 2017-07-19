@@ -21,15 +21,20 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.database.DataSetObserver;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.v4.util.Pair;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.AttributeSet;
@@ -79,6 +84,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     private Paint mRectPaint;
     private Paint mDividerPaint;
 
+    private Drawable mIndicatorIcon = null;
     private int mIndicatorColor;
     private int mIndicatorHeight = 2;
 
@@ -104,6 +110,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
     private Typeface mTabTextTypeface = null;
     private int mTabTextTypefaceStyle = Typeface.BOLD;
 
+    private Bitmap mIndicatorBitmap = null;
+    private TextView mSelectedTextView = null;
     private int mScrollOffset;
     private int mLastScrollX = 0;
 
@@ -165,6 +173,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
         // get custom attrs for tabs and container
         a = context.obtainStyledAttributes(attrs, R.styleable.PagerSlidingTabStrip);
+        mIndicatorIcon = a.getDrawable(R.styleable.PagerSlidingTabStrip_pstsIndicatorIcon);
         mIndicatorColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsIndicatorColor, mIndicatorColor);
         mIndicatorHeight = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsIndicatorHeight, mIndicatorHeight);
         mUnderlineColor = a.getColor(R.styleable.PagerSlidingTabStrip_pstsUnderlineColor, mUnderlineColor);
@@ -194,6 +203,10 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
                             Color.red(textPrimaryColor),
                             Color.green(textPrimaryColor),
                             Color.blue(textPrimaryColor)));
+        }
+
+        if (mIndicatorIcon != null) {
+            mIndicatorBitmap = ((BitmapDrawable)mIndicatorIcon).getBitmap();
         }
 
         //Tab text typeface and style
@@ -428,6 +441,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
         }
 
         // draw indicator line
+
         if (mIndicatorHeight > 0) {
             mRectPaint.setColor(mIndicatorColor);
             Float[] lines = getIndicatorCoordinates();
@@ -435,7 +449,21 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             View currentTab = mTabsContainer.getChildAt(mCurrentPosition);
             float lineLeft = currentTab.getPaddingLeft();
             float lineRight = currentTab.getPaddingRight();
-            canvas.drawRect(lines[0] + mPaddingLeft + lineLeft, lines[2] + mIndicatorHeight, lines[1] + mPaddingLeft - lineRight, lines[2] + 2 * mIndicatorHeight, mRectPaint);
+            if (mIndicatorIcon == null) {
+                canvas.drawRect(lines[0] + mPaddingLeft + lineLeft, lines[2] + mIndicatorHeight, lines[1] + mPaddingLeft - lineRight, lines[2] + 2 * mIndicatorHeight, mRectPaint);
+            }
+            else {
+                RectF rectangle = new RectF(lines[0] + mPaddingLeft + lineLeft, lines[2] + mIndicatorHeight, lines[1] + mPaddingLeft - lineRight, lines[2] + 2 * mIndicatorHeight);
+
+                float xTranslation = rectangle.centerX() - mIndicatorBitmap.getWidth() / 2;
+                float yTranslation = 2 * mIndicatorHeight;
+
+                Matrix transformation = new Matrix();
+                transformation.postTranslate(xTranslation, yTranslation);
+                transformation.preScale(1, 1);
+
+                canvas.drawBitmap(mIndicatorBitmap, transformation, null);
+            }
         }
     }
 
@@ -513,6 +541,10 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             TextView tab_title = (TextView) tab.findViewById(R.id.psts_tab_title);
             if (tab_title != null) {
                 tab_title.setSelected(false);
+                if (mIndicatorIcon != null) {
+                    tab_title.setTextColor(mTabTextColor);
+                    tab_title.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTabTextSize);
+                }
             }
             if (isCustomTabs) ((CustomTabProvider) mPager.getAdapter()).tabUnselected(tab);
         }
@@ -523,6 +555,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
             TextView tab_title = (TextView) tab.findViewById(R.id.psts_tab_title);
             if (tab_title != null) {
                 tab_title.setSelected(true);
+                if (mIndicatorIcon != null) {
+                    tab_title.setTextColor(mIndicatorColor);
+                    float font_plus = 3 * getResources().getDisplayMetrics().scaledDensity;
+                    tab_title.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTabTextSize + font_plus);
+                }
             }
             if (isCustomTabs) ((CustomTabProvider) mPager.getAdapter()).tabSelected(tab);
         }
